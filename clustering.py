@@ -1,8 +1,8 @@
+from __future__ import division
+import scipy as sc
 import pandas as pd
 import numpy as np
 import datetime
-import scipy as sc
-from __future__ import division
 import time
 import datetime
 from sklearn.cluster import KMeans
@@ -74,7 +74,7 @@ def main():
 	ON T1.uid_i = T2.uid_i
 
 	'''
-	df_dimensions_collapsed_w1 = pd.read_gbq(week1_query,project_id='mcoc-bi')
+	df_dimensions_collapsed_w1 = gbq_large.read_gbq(week1_query,project_id='mcoc-bi',destination_table='datascience_view.clusters_tmp')
 	df_dimensions_collapsed_w1=df_dimensions_collapsed_w1.fillna(0)
 	df_dimensions = df_dimensions_collapsed_w1[['ave_f','special_crystal_f','pve_consumable_f','upgrade_f','premium_hero_f']]
 	est_c = KMeans(n_clusters=10)
