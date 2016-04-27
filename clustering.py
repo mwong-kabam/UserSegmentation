@@ -74,10 +74,12 @@ def main():
 	ON T1.uid_i = T2.uid_i
 
 	'''
+	print('performing query ...')
 	df_dimensions_collapsed_w1 = gbq_large.read_gbq(week1_query,project_id='mcoc-bi',destination_table='datascience_view.clusters_tmp')
 	df_dimensions_collapsed_w1=df_dimensions_collapsed_w1.fillna(0)
 	df_dimensions = df_dimensions_collapsed_w1[['ave_f','special_crystal_f','pve_consumable_f','upgrade_f','premium_hero_f']]
 	est_c = KMeans(n_clusters=10)
+	print('clustering ...')
 	est_c.cluster_centers_ = np.asarray([[ 0.02694769,  0.06531768,  0.06121219,  0.82539261,  0.02112983],
 	       [ 0.05772959,  0.37772436,  0.09730477,  0.40487444,  0.06236684],
 	       [ 0.08125626,  0.29389585,  0.42306508,  0.12683245,  0.07495037],
@@ -89,6 +91,7 @@ def main():
 	       [ 0.03944744,  0.05819858,  0.79046582,  0.09186975,  0.02001841],
 	       [ 0.04018328,  0.35265425,  0.08800917,  0.11709595,  0.40205735]])
 	labels_c=est_c.predict(df_dimensions)
+	print('post processing ...')
 	df_dimensions_collapsed_w1['cluster_label_i'] = labels_c
 	df_write = df_dimensions_collapsed_w1
 	df_write['ave_f'] = df_write.ave_f.apply(lambda x: np.fabs(x))
@@ -99,7 +102,9 @@ def main():
 	df_write['_ts_t'] = start_date.strftime('%Y-%m-%d %H:%M:%S')
 	filename_str = 'segmentation.csv'
 	table_write = 'mcoc-bi:marvel_bi.user_segmentation_historical'+ start_date.strftime('%Y%m%d')
+	print('writing csv ...')
 	df_write.to_csv(filename_str,index=False)
+	print('bq loading ...')
 	subprocess.call("bq load --source_format=CSV --skip_leading_rows=1 "+table_write+ " " + filename_str + " uid_i:integer,ave_f:float,special_crystal_f:float,pve_consumable_f:float,upgrade_f:float,premium_hero_f:float,n_transactions_i:integer,age_i:integer,cluster_label_i:integer,_ts_t:timestamp",shell=True)
 
 if __name__ == "__main__":
